@@ -1,0 +1,25 @@
+---
+title: "LAB_1"
+author: "mmcharchuta"
+date: "2024-11-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", "rnaturalearth","rnaturalearthdata", "sf", "vegan","LEA", "graph4lg")
+lapply(packages, require, character.only = TRUE)
+
+path <- choose.files()
+pines_data <- poppr::read.genalex(
+                            path,
+                            sep = ',',
+                            geo = TRUE,
+                            ploidy = 2,
+                            genclone = FALSE
+                            )
+```
+
