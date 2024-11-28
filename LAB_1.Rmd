@@ -9,7 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ```{r}
+# Zadanie I
 packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", "rnaturalearth","rnaturalearthdata", "sf", "vegan","LEA", "graph4lg")
 lapply(packages, require, character.only = TRUE)
 
@@ -25,7 +27,18 @@ summary(pines_data)
 length(unique(pines_data@pop))
 pines_data@all.names
 
+missing_pines_data <- poppr::info_table(
+                  gen = pines_data,
+                  type = "missing", 
+                  plot = T,
+                  low = "white", 
+                  scaled = F,
+                  percent = T)
+```
 
+
+```{r}
+# Zadanie II
 # Genotype accumulation curve
 poppr::genotype_curve(
   gen = pines_data,
@@ -34,6 +47,7 @@ poppr::genotype_curve(
 p <- last_plot()
 # last_plot() używamy by dodać krzywą trendu
 p +geom_smooth(method = "loess")+theme_classic()
+
 ggsave("figures/genotype_accumulation_curve.png", plot = p, width = 8, height = 6, dpi = 300)
 
 missing_pines_data <- poppr::info_table(
@@ -62,6 +76,29 @@ missingno(pop = pines_data,
 ```
 
 ```{r}
+# a)
+# test globalny HWE
+# test wykonaj na obiekcie genind
+round(pegas::hw.test(pines_data, B = 0), digits = 5)
+# test po populacjach
+HWE.test <- (sapply(adegenet::seppop(pines_data), function(x) hw.test(x, B=0)[,3]))
+# funkcja seppop() dzieli oryginalny obiekt genind na osobne genind dla
+# każdej populacji
+# wynikiem jest lista więc stosujemy sapply by wykonać funkcję hw.test
+# dla każdego elementu listy. Interesuje nas tylko p value, więc [,3]
+# wyciąga nam z powstałej tabeli jedynie 3 kolumnę
+# Używamy transpozycji by dane były w formacie Populacje X Loci
+HWE.test.chisq <- t((HWE.test)) 
+round(HWE.test.chisq,5)
+# wizualzacja wartości p jako heatmap
+
+corrplot::corrplot(corr = HWE.test.chisq,is.corr = F,method = "number",col = COL1("Reds"),bg = "grey80")
+
+LD.pair <- pair.ia(pines_data,high = "red", low= "white")
+last_plot()+ theme_classic()
+
+# b)
+
 # Base R
 # stworzenie obiektu zawierającego podsumowanie genind
 
@@ -89,6 +126,8 @@ barplot_N_alleles + scale_fill_manual(values = c("green4", "yellow2", "brown1", 
 
 ggsave("figures/barplot_n_alleles.png", plot = barplot_N_alleles, width = 8, height = 6, dpi = 300)
 
+
+#c)
 pines_hierfstat <- genind2hierfstat(pines_data)
 mean_richness <- apply(allelic.richness(pines_hierfstat)$Ar, MARGIN = 2, FUN = mean) %>%
   round(digits = 3)
@@ -104,10 +143,27 @@ barplot_mean_richness + scale_fill_manual(values = c("green4", "yellow2", "brown
 ggsave("figures/barplot_mean_richness.png", plot = barplot_mean_richness, width = 8, height = 6, dpi = 300)
 
 
-```
 
-```{r}
 
+df <- as.data.frame(t(allelic.richness(pines_hierfstat)$Ar))
+df$pops <- rownames(df)
+df$species <- c(rep("PUG",4),
+                       rep("PM",2), 
+                       rep("PUN",2),
+                       rep("PS", 4))
+# Zamień na ramkę na długi format do wizualizacji w ggplot
+df_long <- tidyr::pivot_longer(data = df,cols = starts_with("loci"), names_to = "loci", values_to = "AR")
+## wizualizacja
+boxplot_Ar_per_species <- ggplot(df_long, aes(x = reorder(species, AR), y = AR, fill = loci)) +
+  geom_boxplot() +
+  labs(x = "Species", y = "Allelic Richness") +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(9, "Set3")) +  # 9 distinct colors
+  theme_classic()
+
+
+ggsave("figures/boxplot_Ar_per_species.png", plot = boxplot_Ar_per_species, width = 8, height = 6, dpi = 300)
+
+# d)
 PA <- poppr::private_alleles(pines_data) %>% apply(MARGIN = 1, FUN = sum)
 
 basic_stats_df$PA <- PA
@@ -120,9 +176,7 @@ barplot_private_alleles + scale_fill_manual(values = c("green4", "yellow2", "bro
 
 ggsave("figures/barplot_private_alleles.png", plot = barplot_private_alleles, width = 8, height = 6, dpi = 300)
 
-```
-
-```{r}
+# e)
 
 HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
 HO_stats$
@@ -139,6 +193,18 @@ barplot_Ho + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodger
 
 ggsave("figures/barplot_Ho.png", plot = barplot_Ho, width = 8, height = 6, dpi = 300)
 
+HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
+HO_stats$
+
+Ho <-  apply(HO_stats$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
+
+basic_stats_df$HO <- Ho
+
+barplot_Ho <- ggplot(basic_stats_df, aes(x= reorder(pop, HO), 
+                                                y= HO, fill = species))+geom_bar(stat="identity")
+barplot_Ho
+
+barplot_Ho + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+
+ggsave("figures/barplot_Ho.png", plot = barplot_Ho, width = 8, height = 6, dpi = 300)
 ```
-
-
