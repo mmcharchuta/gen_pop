@@ -13,13 +13,83 @@ knitr::opts_chunk$set(echo = TRUE)
 packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", "rnaturalearth","rnaturalearthdata", "sf", "vegan","LEA", "graph4lg")
 lapply(packages, require, character.only = TRUE)
 
-path <- choose.files()
+path <- "data/Genotypy.csv"
 pines_data <- poppr::read.genalex(
-                            path,
-                            sep = ',',
-                            geo = TRUE,
-                            ploidy = 2,
-                            genclone = FALSE
-                            )
+  genalex = path,
+  sep = ';',
+  geo = T,
+  ploidy = 2,
+  genclone = F
+)
+summary(pines_data)
+length(unique(pines_data@pop))
+pines_data@all.names
+
+
+# Genotype accumulation curve
+poppr::genotype_curve(
+  gen = pines_data,
+  sample = 1000,
+  quiet = F) 
+p <- last_plot()
+# last_plot() używamy by dodać krzywą trendu
+p +geom_smooth(method = "loess")+theme_classic()
+ggsave("figures/genotype_accumulation_curve.png", plot = p, width = 8, height = 6, dpi = 300)
+
+missing_pines_data <- poppr::info_table(
+                  gen = pines_data,
+                  type = "missing", 
+                  plot = T,
+                  low = "white", 
+                  scaled = F,
+                  percent = T)
+# ggsave("figures/missing_data_percent_T.png", plot = missing_pines_data, width = 8, height = 6, dpi = 300)
+
+missing_pines_data <- poppr::info_table(
+                  gen = pines_data,
+                  type = "missing", 
+                  plot = T,
+                  low = "white", 
+                  scaled = F,
+                  percent = F)
+# ggsave("figures/missing_data_percent_F.png", plot = missing_pines_data, width = 8, height = 6, dpi = 300)
+
+
+missingno(pop = pines_data,
+          type = "geno",
+          cutoff = 0.1)
+
 ```
+
+```{r}
+# Base R
+# stworzenie obiektu zawierającego podsumowanie genind
+
+sum_p <- summary(pines_data)
+sum_p$n.by.pop
+barpplot_n_allels_by_pop <- ggplot(sum_p$n.by.pop, 
+        las=3,xlab = "Population", 
+        ylab = "Number of alleles")
+
+basic_stats_df <- data.frame(alleles = sum_p$pop.n.all,
+           pop = popNames(pines_data),
+           species = c(rep("PUG",4),
+                       rep("PM",2), 
+                       rep("PUN",2),
+                       rep("PS", 4)))
+
+basic_stats_df
+
+
+barplot_N_alleles <- ggplot(basic_stats_df, aes(x= reorder(pop, alleles), 
+                                                y= alleles, fill = species))+geom_bar(stat="identity")
+barplot_N_alleles
+
+
+pines_hierfstat <- genind2hierfstat(pines_data)
+mean_richness <- apply(allelic.richness(pines_hierfstat)$Ar, MARGIN = 2, FUN = mean) %>%
+  round(digits = 3)
+
+```
+
 
