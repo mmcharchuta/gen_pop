@@ -153,13 +153,16 @@ df$species <- c(rep("PUG",4),
                        rep("PS", 4))
 # Zamień na ramkę na długi format do wizualizacji w ggplot
 df_long <- tidyr::pivot_longer(data = df,cols = starts_with("loci"), names_to = "loci", values_to = "AR")
-## wizualizacja
-boxplot_Ar_per_species <- ggplot(df_long, aes(x = reorder(species, AR), y = AR, fill = loci)) +
+
+# Load the dplyr library
+library(dplyr)
+
+boxplot_Ar_per_species <- ggplot(df_long, aes(x = reorder(species, AR), y = AR, fill = species)) +
   geom_boxplot() +
   labs(x = "Species", y = "Allelic Richness") +
-  scale_fill_manual(values = RColorBrewer::brewer.pal(9, "Set3")) +  # 9 distinct colors
+  scale_fill_manual(values = RColorBrewer::brewer.pal(length(unique(df_long$species)), "Set3")) + 
   theme_classic()
-
+print(boxplot_Ar_per_species)
 
 ggsave("figures/boxplot_Ar_per_species.png", plot = boxplot_Ar_per_species, width = 8, height = 6, dpi = 300)
 
@@ -176,6 +179,10 @@ barplot_private_alleles + scale_fill_manual(values = c("green4", "yellow2", "bro
 
 ggsave("figures/barplot_private_alleles.png", plot = barplot_private_alleles, width = 8, height = 6, dpi = 300)
 
+```
+
+
+```{r}
 # e)
 
 HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
@@ -193,18 +200,52 @@ barplot_Ho + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodger
 
 ggsave("figures/barplot_Ho.png", plot = barplot_Ho, width = 8, height = 6, dpi = 300)
 
-HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
-HO_stats$
+Hs <-  apply(HO_stats$Hs, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
 
-Ho <-  apply(HO_stats$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
+basic_stats_df$HS <- Hs
 
-basic_stats_df$HO <- Ho
+barplot_Hs <- ggplot(basic_stats_df, aes(x= reorder(pop, HS), 
+                                                y= HS, fill = species))+geom_bar(stat="identity")
+barplot_Hs
 
-barplot_Ho <- ggplot(basic_stats_df, aes(x= reorder(pop, HO), 
-                                                y= HO, fill = species))+geom_bar(stat="identity")
-barplot_Ho
+barplot_Hs + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
 
-barplot_Ho + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+ggsave("figures/barplot_Hs.png", plot = barplot_Hs, width = 8, height = 6, dpi = 300)
 
-ggsave("figures/barplot_Ho.png", plot = barplot_Ho, width = 8, height = 6, dpi = 300)
+Fis <-  apply(HO_stats$Fis, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
+
+basic_stats_df$FIS <- Fis
+
+barplot_Fis <- ggplot(basic_stats_df, aes(x= reorder(pop, FIS), 
+                                                y= FIS, fill = species))+geom_bar(stat="identity")
+barplot_Fis
+
+barplot_Fis + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+
+ggsave("figures/barplot_Fis.png", plot = barplot_Fis, width = 8, height = 6, dpi = 300)
+
 ```
+
+
+```{r}
+# zapisanie informacji o lokalizacji osobników jako ramka danych
+loc <- as.data.frame(pines_data$other) 
+# modyfikcja powyższej ramki by zawierała lokalizacje populacji
+(hint – każdy osobnik w populacji ma tę samą lokalizację) 
+loc_pops <- XXX(loc)
+# stworzenie ramki danych zawierającej lokalizacje populacji, miary zmienności i oznaczenie gatunkowe
+map_df <- data.frame( lat =loc$xy.x, long =loc$xy.y,species =… , Ho =…, He =…, Fis =…)
+# przygotowanie mapy 
+world <- ne_countries(scale = “medium”, returnclass = “sf”)
+# wizualizacja pojedynczej miary zmienności, gatunek za pomocą kształtu, miara kolorem
+ggplot(data = world) +
+geom_sf() +
+geom_point(data = map_df, aes(x = long, y = lat, shape = species, color = Ho), size = 4) +
+coord_sf(xlim = c(-10, 40), ylim = c(40, 70), expand = FALSE)+
+scale_shape_manual(values=c( 15, 16, 17,18))+
+scale_color_continuous(type = “viridis”)+
+theme_minimal()
+# analogiczną wizualizację wykonaj dla pozostałych statystyk
+
+```
+
