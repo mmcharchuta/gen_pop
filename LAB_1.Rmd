@@ -5,247 +5,206 @@ date: "2024-11-28"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r}
-# Zadanie I
-packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", "rnaturalearth","rnaturalearthdata", "sf", "vegan","LEA", "graph4lg")
+# Load necessary packages
+packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", 
+              "rnaturalearth", "rnaturalearthdata", "sf", "vegan", "LEA", "graph4lg")
 lapply(packages, require, character.only = TRUE)
 
+# Load data
 path <- "data/Genotypy.csv"
 pines_data <- poppr::read.genalex(
   genalex = path,
   sep = ';',
-  geo = T,
+  geo = TRUE,
   ploidy = 2,
-  genclone = F
+  genclone = FALSE
 )
+
+# Summarize data
 summary(pines_data)
 length(unique(pines_data@pop))
 pines_data@all.names
 
+# Missing data information
 missing_pines_data <- poppr::info_table(
-                  gen = pines_data,
-                  type = "missing", 
-                  plot = T,
-                  low = "white", 
-                  scaled = F,
-                  percent = T)
+  gen = pines_data,
+  type = "missing", 
+  plot = TRUE,
+  low = "white", 
+  scaled = FALSE,
+  percent = TRUE
+)
+
 ```
 
-
 ```{r}
-# Zadanie II
 # Genotype accumulation curve
 poppr::genotype_curve(
   gen = pines_data,
   sample = 1000,
-  quiet = F) 
+  quiet = FALSE
+)
 p <- last_plot()
-# last_plot() używamy by dodać krzywą trendu
-p +geom_smooth(method = "loess")+theme_classic()
+p + geom_smooth(method = "loess") + theme_classic()
 
+# Save genotype accumulation curve
 ggsave("figures/genotype_accumulation_curve.png", plot = p, width = 8, height = 6, dpi = 300)
 
+# Missing data plot (percent)
 missing_pines_data <- poppr::info_table(
-                  gen = pines_data,
-                  type = "missing", 
-                  plot = T,
-                  low = "white", 
-                  scaled = F,
-                  percent = T)
-# ggsave("figures/missing_data_percent_T.png", plot = missing_pines_data, width = 8, height = 6, dpi = 300)
+  gen = pines_data,
+  type = "missing", 
+  plot = TRUE,
+  low = "white", 
+  scaled = FALSE,
+  percent = FALSE
+)
 
-missing_pines_data <- poppr::info_table(
-                  gen = pines_data,
-                  type = "missing", 
-                  plot = T,
-                  low = "white", 
-                  scaled = F,
-                  percent = F)
-# ggsave("figures/missing_data_percent_F.png", plot = missing_pines_data, width = 8, height = 6, dpi = 300)
-
-
-missingno(pop = pines_data,
-          type = "geno",
-          cutoff = 0.1)
+# Genotype missingness visualization
+missingno(pop = pines_data, type = "geno", cutoff = 0.1)
 
 ```
 
 ```{r}
-# a)
-# test globalny HWE
-# test wykonaj na obiekcie genind
+# Global HWE test
 round(pegas::hw.test(pines_data, B = 0), digits = 5)
-# test po populacjach
-HWE.test <- (sapply(adegenet::seppop(pines_data), function(x) hw.test(x, B=0)[,3]))
-# funkcja seppop() dzieli oryginalny obiekt genind na osobne genind dla
-# każdej populacji
-# wynikiem jest lista więc stosujemy sapply by wykonać funkcję hw.test
-# dla każdego elementu listy. Interesuje nas tylko p value, więc [,3]
-# wyciąga nam z powstałej tabeli jedynie 3 kolumnę
-# Używamy transpozycji by dane były w formacie Populacje X Loci
-HWE.test.chisq <- t((HWE.test)) 
-round(HWE.test.chisq,5)
-# wizualzacja wartości p jako heatmap
 
-corrplot::corrplot(corr = HWE.test.chisq,is.corr = F,method = "number",col = COL1("Reds"),bg = "grey80")
+# HWE test per population
+HWE.test <- sapply(adegenet::seppop(pines_data), function(x) hw.test(x, B = 0)[, 3])
+HWE.test.chisq <- t(HWE.test)
+round(HWE.test.chisq, 5)
 
-LD.pair <- pair.ia(pines_data,high = "red", low= "white")
-last_plot()+ theme_classic()
+# Visualize HWE test results
+corrplot::corrplot(corr = HWE.test.chisq, is.corr = FALSE, method = "number", col = COL1("Reds"), bg = "grey80")
 
-# b)
+# Linkage Disequilibrium (LD) Plot
+LD.pair <- pair.ia(pines_data, high = "red", low = "white")
+last_plot() + theme_classic()
 
-# Base R
-# stworzenie obiektu zawierającego podsumowanie genind
+```
 
+```{r}
+# Summary and allele number per population
 sum_p <- summary(pines_data)
 sum_p$n.by.pop
-barpplot_n_allels_by_pop <- ggplot(sum_p$n.by.pop, 
-        las=3,xlab = "Population", 
-        ylab = "Number of alleles")
 
-basic_stats_df <- data.frame(alleles = sum_p$pop.n.all,
-           pop = popNames(pines_data),
-           species = c(rep("PUG",4),
-                       rep("PM",2), 
-                       rep("PUN",2),
-                       rep("PS", 4)))
-
-basic_stats_df
-
-
-barplot_N_alleles <- ggplot(basic_stats_df, aes(x= reorder(pop, alleles), 
-                                                y= alleles, fill = species))+geom_bar(stat="identity")
-barplot_N_alleles
-
-barplot_N_alleles + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+# Bar plot of allele numbers by population
+basic_stats_df <- data.frame(
+  alleles = sum_p$pop.n.all,
+  pop = popNames(pines_data),
+  species = c(rep("PUG", 4), rep("PM", 2), rep("PUN", 2), rep("PS", 4))
+)
+barplot_N_alleles <- ggplot(basic_stats_df, aes(x = reorder(pop, alleles), y = alleles, fill = species)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + 
+  theme_classic()
 
 ggsave("figures/barplot_n_alleles.png", plot = barplot_N_alleles, width = 8, height = 6, dpi = 300)
 
+```
 
-#c)
+```{r}
+# Compute allelic richness (AR) and plot
 pines_hierfstat <- genind2hierfstat(pines_data)
 mean_richness <- apply(allelic.richness(pines_hierfstat)$Ar, MARGIN = 2, FUN = mean) %>%
   round(digits = 3)
 
 basic_stats_df$AR <- mean_richness
-
-barplot_mean_richness <- ggplot(basic_stats_df, aes(x= reorder(pop, AR), 
-                                                y= AR, fill = species))+geom_bar(stat="identity")
-barplot_mean_richness
-
-barplot_mean_richness + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+barplot_mean_richness <- ggplot(basic_stats_df, aes(x = reorder(pop, AR), y = AR, fill = species)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + 
+  theme_classic()
 
 ggsave("figures/barplot_mean_richness.png", plot = barplot_mean_richness, width = 8, height = 6, dpi = 300)
 
+```
 
-
-
-df <- as.data.frame(t(allelic.richness(pines_hierfstat)$Ar))
-df$pops <- rownames(df)
-df$species <- c(rep("PUG",4),
-                       rep("PM",2), 
-                       rep("PUN",2),
-                       rep("PS", 4))
-# Zamień na ramkę na długi format do wizualizacji w ggplot
-df_long <- tidyr::pivot_longer(data = df,cols = starts_with("loci"), names_to = "loci", values_to = "AR")
-
-# Load the dplyr library
-library(dplyr)
-
-boxplot_Ar_per_species <- ggplot(df_long, aes(x = reorder(species, AR), y = AR, fill = species)) +
-  geom_boxplot() +
-  labs(x = "Species", y = "Allelic Richness") +
-  scale_fill_manual(values = RColorBrewer::brewer.pal(length(unique(df_long$species)), "Set3")) + 
-  theme_classic()
-print(boxplot_Ar_per_species)
-
-ggsave("figures/boxplot_Ar_per_species.png", plot = boxplot_Ar_per_species, width = 8, height = 6, dpi = 300)
-
-# d)
+```{r}
+# Compute private alleles (PA)
 PA <- poppr::private_alleles(pines_data) %>% apply(MARGIN = 1, FUN = sum)
-
 basic_stats_df$PA <- PA
 
-barplot_private_alleles <- ggplot(basic_stats_df, aes(x= reorder(pop, PA), 
-                                                y= PA, fill = species))+geom_bar(stat="identity")
-barplot_private_alleles
-
-barplot_private_alleles + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
+# Bar plot for private alleles
+barplot_private_alleles <- ggplot(basic_stats_df, aes(x = reorder(pop, PA), y = PA, fill = species)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + 
+  theme_classic()
 
 ggsave("figures/barplot_private_alleles.png", plot = barplot_private_alleles, width = 8, height = 6, dpi = 300)
 
 ```
 
-
 ```{r}
-# e)
-
+# Compute Ho, Hs, and Fis
 HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
-HO_stats$
 
-Ho <-  apply(HO_stats$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
-
+Ho <- apply(HO_stats$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>% round(digits = 3)
 basic_stats_df$HO <- Ho
 
-barplot_Ho <- ggplot(basic_stats_df, aes(x= reorder(pop, HO), 
-                                                y= HO, fill = species))+geom_bar(stat="identity")
-barplot_Ho
-
-barplot_Ho + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
-
+barplot_Ho <- ggplot(basic_stats_df, aes(x = reorder(pop, HO), y = HO, fill = species)) +
+  geom_bar(stat = "identity") + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
 ggsave("figures/barplot_Ho.png", plot = barplot_Ho, width = 8, height = 6, dpi = 300)
 
-Hs <-  apply(HO_stats$Hs, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
-
+Hs <- apply(HO_stats$Hs, MARGIN = 2, FUN = mean, na.rm = TRUE) %>% round(digits = 3)
 basic_stats_df$HS <- Hs
 
-barplot_Hs <- ggplot(basic_stats_df, aes(x= reorder(pop, HS), 
-                                                y= HS, fill = species))+geom_bar(stat="identity")
-barplot_Hs
-
-barplot_Hs + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
-
+barplot_Hs <- ggplot(basic_stats_df, aes(x = reorder(pop, HS), y = HS, fill = species)) +
+  geom_bar(stat = "identity") + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
 ggsave("figures/barplot_Hs.png", plot = barplot_Hs, width = 8, height = 6, dpi = 300)
 
-Fis <-  apply(HO_stats$Fis, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%  round(digits = 3)
-
+Fis <- apply(HO_stats$Fis, MARGIN = 2, FUN = mean, na.rm = TRUE) %>% round(digits = 3)
 basic_stats_df$FIS <- Fis
 
-barplot_Fis <- ggplot(basic_stats_df, aes(x= reorder(pop, FIS), 
-                                                y= FIS, fill = species))+geom_bar(stat="identity")
-barplot_Fis
-
-barplot_Fis + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
-
+barplot_Fis <- ggplot(basic_stats_df, aes(x = reorder(pop, FIS), y = FIS, fill = species)) +
+  geom_bar(stat = "identity") + scale_fill_manual(values = c("green4", "yellow2", "brown1", "dodgerblue")) + theme_classic()
 ggsave("figures/barplot_Fis.png", plot = barplot_Fis, width = 8, height = 6, dpi = 300)
 
 ```
 
-
 ```{r}
-# zapisanie informacji o lokalizacji osobników jako ramka danych
-loc <- as.data.frame(pines_data$other) 
-# modyfikcja powyższej ramki by zawierała lokalizacje populacji
-(hint – każdy osobnik w populacji ma tę samą lokalizację) 
-loc_pops <- XXX(loc)
-# stworzenie ramki danych zawierającej lokalizacje populacji, miary zmienności i oznaczenie gatunkowe
-map_df <- data.frame( lat =loc$xy.x, long =loc$xy.y,species =… , Ho =…, He =…, Fis =…)
-# przygotowanie mapy 
-world <- ne_countries(scale = “medium”, returnclass = “sf”)
-# wizualizacja pojedynczej miary zmienności, gatunek za pomocą kształtu, miara kolorem
-ggplot(data = world) +
-geom_sf() +
-geom_point(data = map_df, aes(x = long, y = lat, shape = species, color = Ho), size = 4) +
-coord_sf(xlim = c(-10, 40), ylim = c(40, 70), expand = FALSE)+
-scale_shape_manual(values=c( 15, 16, 17,18))+
-scale_color_continuous(type = “viridis”)+
-theme_minimal()
-# analogiczną wizualizację wykonaj dla pozostałych statystyk
+# Save individual location data
+loc <- as.data.frame(pines_data$other)
+basic_stats_df$loc <- loc
+
+loc_pops <- unique(loc)
+
+# Map preparation
+map_df <- data.frame(
+  lat = loc_pops$xy.x,
+  long = loc_pops$xy.y,
+  species = basic_stats_df$species,
+  Ho = basic_stats_df$HO,
+  He = basic_stats_df$HS,
+  Fis = basic_stats_df$FIS
+)
+
+# Load map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Function to create variability maps
+create_variability_map <- function(data, value_col, output_filename, color_label) {
+  map <- ggplot(data = world) +
+    geom_sf() +
+    geom_point(data = data, aes(x = lat, y = long, shape = species, color = !!sym(value_col)), size = 4) +
+    coord_sf(xlim = c(-10, 40), ylim = c(40, 70), expand = FALSE) +
+    scale_shape_manual(values = c(15, 16, 17, 18)) +
+    scale_color_continuous(type = "viridis", name = color_label) +
+    scale_x_continuous(labels = function(x) paste0(x, "°")) +
+    scale_y_continuous(labels = function(y) paste0(y, "°")) +
+    theme_void()
+
+  ggsave(output_filename, plot = map, width = 8, height = 6, dpi = 300)
+}
+
+# Maps for Ho, Hs, and Fis
+create_variability_map(map_df, "Ho", "figures/Ho_map.png", "Observed Heterozygosity (Ho)")
+create_variability_map(map_df, "He", "figures/Hs_map.png", "Expected Heterozygosity (He)")
+create_variability_map(map_df, "Fis", "figures/Fis_map.png", "FIS")
 
 ```
 
