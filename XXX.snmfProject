@@ -1,0 +1,5 @@
+new("snmfProject", snmfProject.file = "XXX.snmfProject", projDir = "C:/Users/mikcha1/OneDrive - Uniwersytet im. Adama Mickiewicza w Poznaniu/Dokumenty/gen_pop/", 
+    snmfDir = "XXX.snmf/", input.file = "XXX.geno", runs = list(), 
+    K = integer(0), snmfClass.files = logical(0), n = integer(0), 
+    L = integer(0), creationTime = structure(1733391208.58635, class = c("POSIXct", 
+    "POSIXt")))

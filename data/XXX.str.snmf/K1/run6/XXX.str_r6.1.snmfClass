@@ -1,0 +1,5 @@
+new("snmfClass", directory = "K1/run6/", snmfClass.file = "XXX.str_r6.1.snmfClass", 
+    K = 1L, run = 6L, CPU = 1L, seed = 698712947L, alpha = 100, 
+    percentage = 0.05, I = 0L, iterations = 200L, entropy = TRUE, 
+    tolerance = 1e-05, crossEntropy = 0.332107871882759, ploidy = 2L, 
+    Q.input.file = "", Q.output.file = "XXX.str_r6.1.Q", G.output.file = "XXX.str_r6.1.G")
