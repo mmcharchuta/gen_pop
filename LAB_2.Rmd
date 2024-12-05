@@ -1,0 +1,41 @@
+---
+title: "LAB_2"
+author: "mmcharchuta"
+date: "2024-12-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# ad IV 
+# a)
+# analiza PCA wymaga kompletności danych – nasze analizy wykazały
+# niewielkie ilości missing data – dlatego wykonamy imputację braków
+# danych wstawiając zamiast nich wartości średnie 
+
+x = adegenet::tab(pines_data, NA.method = "mean")
+# Wykonanie PCA
+pca1 = ade4::dudi.pca(x, scannf = FALSE, scale = T, nf = 3, center = T)
+# Ile procent zmienności wyjaśniają główne składowe
+
+factoextra::get_eigenvalue(pca1)
+factoextra::fviz_eig(pca1, addlabels = TRUE, ylim = c(0, 10))
+
+# wizualizacja danych 
+# stworzenie wektora kolorów
+
+kolory <- c(rep("brown1",4),rep("green4",2), rep("dodgerblue",2),rep("yellow2", 4) )
+
+ind.pca <- factoextra::fviz_pca_ind( pca1, geom = "point", geom.ind = "point",
+                       pointshape = 21,fill.ind = pop(pines_data),mean.point = F,pointsize = 2,addEllipses = F,palette = kolory)
+ind.pca +theme_classic()
+
+# wykonaj również PCA usuwając argument palette – tak by każda z
+# populacji otrzymała swój kolor
+
+
+```
+
