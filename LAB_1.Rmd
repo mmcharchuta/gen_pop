@@ -169,7 +169,7 @@ ggsave("figures/barplot_Fis.png", plot = barplot_Fis, width = 8, height = 6, dpi
 ```{r}
 # Save individual location data
 loc <- as.data.frame(pines_data$other)
-basic_stats_df$loc <- loc
+# basic_stats_df$loc <- loc
 
 loc_pops <- unique(loc)
 

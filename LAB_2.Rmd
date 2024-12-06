@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r IV a) PCA}
 # ad IV 
 # a)
 # analiza PCA wymaga kompletności danych – nasze analizy wykazały
@@ -31,11 +31,152 @@ kolory <- c(rep("brown1",4),rep("green4",2), rep("dodgerblue",2),rep("yellow2", 
 
 ind.pca <- factoextra::fviz_pca_ind( pca1, geom = "point", geom.ind = "point",
                        pointshape = 21,fill.ind = pop(pines_data),mean.point = F,pointsize = 2,addEllipses = F,palette = kolory)
-ind.pca +theme_classic()
-
+ind.pca <- ind.pca +theme_bw()
+ggsave("figures/PiCeA_by_sp.png", plot = ind.pca, width = 8, height = 6, dpi = 300)
 # wykonaj również PCA usuwając argument palette – tak by każda z
 # populacji otrzymała swój kolor
+ind.pca <- factoextra::fviz_pca_ind( pca1, geom = "point", geom.ind = "point",
+                       pointshape = 21,fill.ind = pop(pines_data),mean.point = F,pointsize = 2,addEllipses = F)
+ind.pca <- ind.pca +theme_bw()
+ggsave("figures/PiCeA_by_pop.png", plot = ind.pca, width = 8, height = 6, dpi = 300)
 
+```
+
+```{r IV b) PCoA}
+# b
+## Analiza na poziomie populacji
+
+# Zamiana obiektu genind na genpop
+genpop_object <- genind2genpop(x = pines_data)
+
+# Obliczanie dystansu Nei
+d0 <- dist.genpop(genpop_object, method = 1)
+
+# Sprawdzenie, czy dystans jest euklidesowy
+is.euclid(d0)
+
+# Zamiana na dystans euklidesowy
+d1 <- cailliez(d0, TRUE)
+
+# Wykonanie analizy PCoA
+pcoa <- wcmdscale(d1, k = 2, eig = TRUE)
+
+# Obliczenie procentu wyjaśnionej zmienności
+percent_pcoa <- pcoa$eig / sum(pcoa$eig) * 100 %>% round(digits = 2)
+barplot(percent_pcoa)
+
+# Stworzenie ramki danych do wizualizacji
+pcoa_df <- as.data.frame(pcoa$points)
+colnames(pcoa_df) <- c("PC1", "PC2")
+species = c(rep("PUG", 4), rep("PM", 2), rep("PUN", 2), rep("PS", 4))
+pcoa_df$species <- species
+pcoa_df$pop <- unique(pines_data$pop)
+
+# Wizualizacja wyników PCoA
+pcoa_plot <- ggplot(pcoa_df, aes(x = PC1, y = PC2, color = species, label = pop)) +
+  geom_point(size = 4) +
+  geom_text(nudge_x = 0.04) +
+  theme_classic() +
+  scale_color_manual(values = c("green4", "yellow2", "brown1", "dodgerblue"))
+
+ggsave("figures/PCoA_by_pop.png", plot = pcoa_plot, width = 8, height = 6, dpi = 300)
+
+# Analiza na poziomie gatunków
+
+# utwórz obiekt genpop, dodając do funkcji genind2genpop argument pop
+# który zawiera przyporządkowanie każdego osobnika do gatunku
+
+spec_ind <- c(rep("PUG", 94), rep("PM", 50), rep("PUN", 48), rep("PS", 108))
+
+genpop_object_spec <-  genind2genpop(x = pines_data, pop = spec_ind)
+
+# kolejne kroki wykonaj analogicznie jak w poprzednim punkcie,
+# modyfikując w odpowiedni sposób kod
+
+# Obliczanie dystansu Nei
+d0 <- dist.genpop(genpop_object_spec, method = 1)
+
+# Sprawdzenie, czy dystans jest euklidesowy
+is.euclid(d0)
+
+# Zamiana na dystans euklidesowy
+d1 <- cailliez(d0, TRUE)
+
+# Wykonanie analizy PCoA
+pcoa <- wcmdscale(d1, k = 2, eig = TRUE)
+
+# Obliczenie procentu wyjaśnionej zmienności
+percent_pcoa <- pcoa$eig / sum(pcoa$eig) * 100 %>% round(digits = 2)
+barplot(percent_pcoa)
+
+# Stworzenie ramki danych do wizualizacji
+pcoa_df <- as.data.frame(pcoa$points)
+colnames(pcoa_df) <- c("PCo1", "PCo2")
+species = c("PUG","PM","PUN","PS")
+pcoa_df$species <- species
+# Wizualizacja wyników PCoA
+pcoa_plot <- ggplot(pcoa_df, aes(x = PCo1, y = -PCo2, color = species, label = species)) +
+  geom_point(size = 4) +
+  geom_text(nudge_x = 0.04) +
+  theme_classic() +
+  scale_color_manual(values = c("green4", "yellow2", "brown1", "dodgerblue"))
+
+ggsave("figures/PCoA_by_spec.png", plot = pcoa_plot, width = 8, height = 6, dpi = 300)
+
+```
+
+```{r IV c) UPGMA}
+## Analiza na poziomie populacji
+
+# Zamiana obiektu genind na genpop
+genpop_object <- genind2genpop(x = pines_data)
+
+# Obliczanie dystansu Nei
+d0 <- dist.genpop(genpop_object, method = 1)
+
+# Zamiana na dystans euklidesowy
+d1 <- cailliez(d0, TRUE)
+plot(upgma(d1))
+
+```
+
+```{r}
+hierfstat::write.struct(dat = pines_hierfstat,
+                        ilab = indNames(pines_data),
+                        pop = pines_hierfstat$pop,
+                        fname = "data/XXX.str") 
+LEA::struct2geno(input.file = "data/XXX.str",ploidy = 2,FORMAT = 2,extra.column = 2)
+
+project = NULL
+project = LEA::snmf("data/XXX.str.geno",
+               K = 1:15,
+               entropy = TRUE,
+               repetitions = 10,
+               project = "new", 
+               alpha = 100)
+# sprawdzenie optymalnej ilości klastrów
+plot(project, col = "blue", pch = 19, cex = 1.2, type = "b") 
+write.table(x = pines_data$pop,file = "pops.txt",quote = F,col.names = F, row.names = F)
+
+sub_genind <- poppr::popsub(pines_data,sublist = c(1:4)) 
+sub_hierfstat <- hierfstat::genind2hierfstat(sub_genind)
+
+hierfstat::write.struct(dat = sub_hierfstat,
+                        ilab = indNames(sub_genind),
+                        pop = sub_hierfstat$pop,
+                        fname = "data/SSS.str") 
+LEA::struct2geno(input.file = "data/SSS.str",ploidy = 2,FORMAT = 2,extra.column = 2)
+
+rojecpct = NULL
+rojecpct = LEA::snmf("data/SSS.str.geno",
+               K = 1:15,
+               entropy = TRUE,
+               repetitions = 10,
+               project = "new", 
+               alpha = 100)
+# sprawdzenie optymalnej ilości klastrów
+plot(rojecpct, col = "blue", pch = 19, cex = 1.2, type = "b") 
+write.table(x = sub_genind$pop,file = "sub_pops.txt",quote = F,col.names = F, row.names = F)
 
 ```
 
