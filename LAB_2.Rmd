@@ -140,7 +140,7 @@ plot(upgma(d1))
 
 ```
 
-```{r}
+```{r IV d) R LEA}
 hierfstat::write.struct(dat = pines_hierfstat,
                         ilab = indNames(pines_data),
                         pop = pines_hierfstat$pop,
@@ -177,6 +177,31 @@ rojecpct = LEA::snmf("data/SSS.str.geno",
 # sprawdzenie optymalnej ilości klastrów
 plot(rojecpct, col = "blue", pch = 19, cex = 1.2, type = "b") 
 write.table(x = sub_genind$pop,file = "sub_pops.txt",quote = F,col.names = F, row.names = F)
+
+```
+
+```{r V a) FST}
+
+# obliczenie pairwise FST dla wszystkich populacji
+pops_fst <-   hierfstat::genet.dist(pines_data, method = "WC84") %>% round(digits = 3)
+
+
+
+# obliczenie fst między gatunkami
+# najpierw zmodyfikujemy obiekt Genind, nadając mu inny wektor populacji
+
+pop(pines_data) 
+# stwórz kopie obiektu Genind
+Genind_object2 <- pines_data
+adegenet::pop(Genind_object2) <- spec_ind #wektor z poprzedniego zadania
+spec_fst <- 
+# wizualizacja fst
+# zamień obiekt zawierający FST na matrycę
+
+fst_matrix_pop <- …
+corrplot(corr = fst_matrix_pop,is.corr = F,method = "color",bg = "grey80",type = "lower",diag = F)
+# wykonaj corrplot również dla spec_fst
+
 
 ```
 

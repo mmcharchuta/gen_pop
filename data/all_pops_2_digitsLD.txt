@@ -1,0 +1,218 @@
+Output from NeEstimator v2.1
+Starting time: Thu Dec 12 10:38:48 2024
+Input File: "all_pops_2_digits.txt"
+
+Number of Loci = 9
+
+LD mating model: Random
+
+Population     1 [PM_1_M3/1]  (Number of Individuals = 25)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       25.0
+Independent Comparisons =        244
+OverAll r^2 =                 0.068010
+Expected r^2 Sample =         0.045184
+Estimated Ne^ =                   11.5
+
+**************************************
+
+Population     2 [PM_2_M4/1]  (Number of Individuals = 25)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       25.0
+Independent Comparisons =        419
+OverAll r^2 =                 0.050234
+Expected r^2 Sample =         0.045184
+Estimated Ne^ =                   59.3
+
+**************************************
+Non-polymorphic loci:     2
+Total non-polymorphic = 1
+
+
+Population     3 [PS_1_S1136]  (Number of Individuals = 26)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       25.5
+Independent Comparisons =        598
+OverAll r^2 =                 0.044881
+Expected r^2 Sample =         0.044188
+Estimated Ne^ =                  442.6
+
+**************************************
+
+Population     4 [PS_2_F1]  (Number of Individuals = 25)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       24.4
+Independent Comparisons =        485
+OverAll r^2 =                 0.051890
+Expected r^2 Sample =         0.046484
+Estimated Ne^ =                   55.2
+
+**************************************
+Non-polymorphic loci:     2
+Total non-polymorphic = 1
+
+
+Population     5 [PS_3_A1]  (Number of Individuals = 32)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       32.0
+Independent Comparisons =        403
+OverAll r^2 =                 0.033147
+Expected r^2 Sample =         0.034365
+Estimated Ne^ =               Infinite
+
+**************************************
+Non-polymorphic loci:     2
+Total non-polymorphic = 1
+
+
+Population     6 [PS_4_P93]  (Number of Individuals = 25)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       24.7
+Independent Comparisons =        484
+OverAll r^2 =                 0.047209
+Expected r^2 Sample =         0.045678
+Estimated Ne^ =                  199.5
+
+**************************************
+Non-polymorphic loci:     2,     3,     4,     7
+Total non-polymorphic = 4
+
+
+Population     7 [PUG_1_U1]  (Number of Individuals = 14)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       14.0
+Independent Comparisons =         47
+OverAll r^2 =                 0.109685
+Expected r^2 Sample =         0.089239
+Estimated Ne^ =                   13.1
+
+**************************************
+
+Population     8 [PUG_2_UB1]  (Number of Individuals = 31)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       31.0
+Independent Comparisons =        245
+OverAll r^2 =                 0.032469
+Expected r^2 Sample =         0.035578
+Estimated Ne^ =               Infinite
+
+**************************************
+
+Population     9 [PUG_3_Z64]  (Number of Individuals = 19)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       19.0
+Independent Comparisons =        171
+OverAll r^2 =                 0.117726
+Expected r^2 Sample =         0.061836
+Estimated Ne^ =                    2.8
+
+**************************************
+Non-polymorphic loci:     3
+Total non-polymorphic = 1
+
+
+Population    10 [PUG_4_UW32]  (Number of Individuals = 30)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       30.0
+Independent Comparisons =        223
+OverAll r^2 =                 0.063841
+Expected r^2 Sample =         0.036878
+Estimated Ne^ =                    9.4
+
+**************************************
+
+Population    11 [PUN_1_HX1]  (Number of Individuals = 24)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       23.4
+Independent Comparisons =        283
+OverAll r^2 =                 0.055750
+Expected r^2 Sample =         0.048628
+Estimated Ne^ =                   41.5
+
+**************************************
+
+Population    12 [PUN_2_HII1]  (Number of Individuals = 24)
+****************
+--------------------------------------
+Lowest Allele Frequency Used       0+
+--------------------------------------
+
+LINKAGE DISEQUILIBRIUM METHOD
+
+Harmonic Mean Sample Size =       23.8
+Independent Comparisons =        289
+OverAll r^2 =                 0.060750
+Expected r^2 Sample =         0.047667
+Estimated Ne^ =                   21.7
+
+**************************************
+
+Ending time: Thu Dec 12 10:38:48 2024
+-------------------------------------
+

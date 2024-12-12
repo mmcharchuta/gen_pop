@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r Loading packages and data}
 # Load necessary packages
 packages <- c("poppr", "ggplot2", "pegas", "corrplot", "hierfstat", "factoextra", "FactoMineR", 
               "rnaturalearth", "rnaturalearthdata", "sf", "vegan", "LEA", "graph4lg")
@@ -42,8 +42,7 @@ missing_pines_data <- poppr::info_table(
 
 ```
 
-```{r}
-# Genotype accumulation curve
+```{r II a) Genotype accumulation curve and missing data checks}
 poppr::genotype_curve(
   gen = pines_data,
   sample = 1000,
@@ -70,8 +69,8 @@ missingno(pop = pines_data, type = "geno", cutoff = 0.1)
 
 ```
 
-```{r}
-# Global HWE test
+```{r III a) # Global HWE test}
+
 round(pegas::hw.test(pines_data, B = 0), digits = 5)
 
 # HWE test per population
@@ -82,13 +81,15 @@ round(HWE.test.chisq, 5)
 # Visualize HWE test results
 corrplot::corrplot(corr = HWE.test.chisq, is.corr = FALSE, method = "number", col = COL1("Reds"), bg = "grey80")
 
+```
+
+```{r IV b) Linkage Disequilibrium (LD) }
 # Linkage Disequilibrium (LD) Plot
 LD.pair <- pair.ia(pines_data, high = "red", low = "white")
 last_plot() + theme_classic()
-
 ```
 
-```{r}
+```{r allele number per population}
 # Summary and allele number per population
 sum_p <- summary(pines_data)
 sum_p$n.by.pop
@@ -108,8 +109,8 @@ ggsave("figures/barplot_n_alleles.png", plot = barplot_N_alleles, width = 8, hei
 
 ```
 
-```{r}
-# Compute allelic richness (AR) and plot
+```{r c) # Compute allelic richness (AR) and plot}
+
 pines_hierfstat <- genind2hierfstat(pines_data)
 mean_richness <- apply(allelic.richness(pines_hierfstat)$Ar, MARGIN = 2, FUN = mean) %>%
   round(digits = 3)
@@ -124,8 +125,7 @@ ggsave("figures/barplot_mean_richness.png", plot = barplot_mean_richness, width 
 
 ```
 
-```{r}
-# Compute private alleles (PA)
+```{r d) # Compute private alleles (PA)}
 PA <- poppr::private_alleles(pines_data) %>% apply(MARGIN = 1, FUN = sum)
 basic_stats_df$PA <- PA
 
@@ -139,8 +139,7 @@ ggsave("figures/barplot_private_alleles.png", plot = barplot_private_alleles, wi
 
 ```
 
-```{r}
-# Compute Ho, Hs, and Fis
+```{r e) Compute Ho, Hs, and Fis }
 HO_stats = hierfstat::basic.stats(pines_data, diploid = TRUE)
 
 Ho <- apply(HO_stats$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>% round(digits = 3)
@@ -166,17 +165,16 @@ ggsave("figures/barplot_Fis.png", plot = barplot_Fis, width = 8, height = 6, dpi
 
 ```
 
-```{r}
+```{r f) Maps}
 # Save individual location data
 loc <- as.data.frame(pines_data$other)
-# basic_stats_df$loc <- loc
-
 loc_pops <- unique(loc)
 
 # Map preparation
 map_df <- data.frame(
-  lat = loc_pops$xy.x,
-  long = loc_pops$xy.y,
+  pop = basic_stats_df$pop,
+  lat = loc_pops$xy.y,
+  long = loc_pops$xy.x,
   species = basic_stats_df$species,
   Ho = basic_stats_df$HO,
   He = basic_stats_df$HS,
@@ -186,25 +184,39 @@ map_df <- data.frame(
 # Load map data
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-# Function to create variability maps
+# Load the ggrepel package for better text placement
+library(ggrepel)
+
+# Function to create variability maps with labels and scaled sizes
 create_variability_map <- function(data, value_col, output_filename, color_label) {
   map <- ggplot(data = world) +
-    geom_sf() +
-    geom_point(data = data, aes(x = lat, y = long, shape = species, color = !!sym(value_col)), size = 4) +
-    coord_sf(xlim = c(-10, 40), ylim = c(40, 70), expand = FALSE) +
-    scale_shape_manual(values = c(15, 16, 17, 18)) +
-    scale_color_continuous(type = "viridis", name = color_label) +
+    geom_sf() +  # Base world map
+    geom_point(data = data, aes(
+      y = lat, x = long, 
+      shape = species, 
+      color = !!sym(value_col), 
+      size = !!sym(value_col)  # Scale point sizes by the selected column
+    ), alpha = 0.8) +  # Slight transparency for better visibility
+    geom_text_repel(data = data, aes(
+      y = lat, x = long, 
+      label = pop  # Label points by population number
+    ), size = 3, fontface = "bold", max.overlaps = 10) +  # Adjust overlap behavior
+    coord_sf(xlim = c(-10, 40), ylim = c(40, 70), expand = FALSE) +  # Focus on Europe
+    scale_shape_manual(values = c(15, 16, 17, 18)) +  # Square, circle, triangle, diamond
+    scale_color_viridis_c(name = color_label) +  # Continuous color scale
+    scale_size_continuous(range = c(2, 8), name = "Value") +  # Scale point size
     scale_x_continuous(labels = function(x) paste0(x, "°")) +
     scale_y_continuous(labels = function(y) paste0(y, "°")) +
-    theme_void()
-
+    theme_bw() +  # Clean theme
+    labs(title = paste0(color_label, " Map"), x = "Longitude", y = "Latitude")
+  
   ggsave(output_filename, plot = map, width = 8, height = 6, dpi = 300)
 }
 
-# Maps for Ho, Hs, and Fis
-create_variability_map(map_df, "Ho", "figures/Ho_map.png", "Observed Heterozygosity (Ho)")
-create_variability_map(map_df, "He", "figures/Hs_map.png", "Expected Heterozygosity (He)")
-create_variability_map(map_df, "Fis", "figures/Fis_map.png", "FIS")
+# Create maps for Ho, Hs, and Fis
+create_variability_map(map_df, "Ho", "figures/Ho_map_scaled.png", "Observed Heterozygosity (Ho)")
+create_variability_map(map_df, "He", "figures/Hs_map_scaled.png", "Expected Heterozygosity (He)")
+create_variability_map(map_df, "Fis", "figures/Fis_map_scaled.png", "FIS")
 
 ```
 
